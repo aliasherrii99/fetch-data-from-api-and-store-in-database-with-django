@@ -7,9 +7,8 @@ def db_changed():
     list_of_changed_data = []
     updated_count = 0
 
-    for i in validated_data_from_api():
-        my_api_data = i
-        my_regNo = i.reg_no
+    for my_api_data in validated_data_from_api():
+        my_regNo = my_api_data.reg_no
 
         try:
             my_row = Fp_data.objects.get(reg_no=my_regNo)
