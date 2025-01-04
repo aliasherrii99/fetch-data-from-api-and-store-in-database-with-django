@@ -8,16 +8,24 @@ fp_url = 'https://fund.fipiran.ir/api/v1/fund/fundcompare'
 
 def change_value(val):
     new_val = ''
-    for i in range(len(val)):
+    for i in range(0, len(val)):
         if val[i] == '_':
             new_val += val[i + 1].upper()
         else:
             new_val += val[i]
-    return new_val
+    final_val = ''
+    for j in range(0 , len(new_val)):
+        if new_val[j].upper() != new_val[j - 1]:
+            final_val += new_val[j]
+    return final_val
 
 
+ # 2- validate data
 class DataV(BaseModel):
-    model_config = ConfigDict(alias_generator=change_value)
+    model_config = ConfigDict(
+        alias_generator=change_value
+    )
+
     reg_no: int = Field(alias="regNo")
     name: str
     rank_of_12_month: Optional[int] = None
@@ -25,11 +33,11 @@ class DataV(BaseModel):
     rank_of_36_month: Optional[int] = None
     rank_of_48_month: Optional[int] = None
     rank_of_60_month: Optional[int] = None
-    rank_last_update: Optional[str] = None
-    fund_type: Optional[int] = None
-    type_of_invest: Optional[str] = None
+    rank_last_update: str
+    fund_type: int
+    type_of_invest: str
     fund_size: Optional[int] = None
-    initiation_date: Optional[str] = None
+    initiation_date: str
     daily_efficiency: Optional[float] = None
     weekly_efficiency: Optional[float] = None
     monthly_efficiency: Optional[float] = None
@@ -48,7 +56,7 @@ class DataV(BaseModel):
     invested_units: Optional[int] = None
     articles_of_association_link: Optional[str] = None
     prospectus_link: Optional[str] = None
-    website_address: Optional[list] = None
+    website_address: list
     manager: str
     manager_seo_register_no: Optional[int] = None
     guarantor_seo_register_no: Optional[int] = None
@@ -57,7 +65,7 @@ class DataV(BaseModel):
     guarantor: str
     beta: Optional[float] = None
     alpha: Optional[float] = None
-    is_completed: Optional[bool] = None
+    is_completed: bool
     five_best: Optional[float] = None
     stock: Optional[float] = None
     bond: Optional[float] = None
@@ -66,7 +74,7 @@ class DataV(BaseModel):
     deposit: Optional[float] = None
     fund_unit: Optional[float] = None
     commodity: Optional[float] = None
-    fund_publisher: Optional[int] = None
+    fund_publisher: int
     small_symbol_name: Optional[str] = None
     ins_code: Optional[str] = None
     fund_watch: Optional[str] = None

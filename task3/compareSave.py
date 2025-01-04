@@ -1,9 +1,6 @@
 from task3.models import Fp_data
-from task3.fetchSave import change_value
 import requests
 import json
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional
 from task3.fetchSave import DataV
 
 fp_url = "https://fund.fipiran.ir/api/v1/fund/fundcompare"
