@@ -52,5 +52,14 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <form method="POST" action="">
+    {% csrf_token %}
+    <label for="reg_no">Enter Registration Number:</label>
+    <input type="text" id="reg_no" name="reg_no" required>
+    <button type="submit">Submit</button>
+    </form>
+    
+    <h2>Result: {{ result }}</h2>
 </body>
 </html>

@@ -4,7 +4,7 @@ from django.db.models import Sum
 distinct_fund_type = Fp_data.objects.values('fund_type').distinct()
 
 
-# return fund type and total asset under management
+# return fund type(list1) and total asset under management(list2)
 def fund_type_total():
 
     list1 = []
@@ -47,9 +47,10 @@ list_of_fund_type3 = []
 for i in list_of_fund_type2:
     list_of_fund_type3.append(name_from_fund_type[i])
 
-# def show():
-#     # print(list(zip(list_of_fund_type, list_of_asset_under_maangement)))
-#     print(list(zip(list_of_fund_type2, list_of_asset_under_maangement2)))
 
-# py manage.py shell
-# from task3.visualization import show
+# give regno and return AUM
+def aum_by_regno(regno):
+    type_of_fund = Fp_data.objects.get(reg_no=regno).fund_type
+    result = list_of_asset_under_maangement[list_of_fund_type.index(type_of_fund)]
+    return result
+
