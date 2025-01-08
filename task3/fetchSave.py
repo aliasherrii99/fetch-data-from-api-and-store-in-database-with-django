@@ -3,9 +3,11 @@ import json
 from task3.models import Fp_data
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
+from prefect import task, flow
 fp_url = 'https://fund.fipiran.ir/api/v1/fund/fundcompare'
 
 
+@task
 def change_value(val):
     new_val = ''
     for i in range(0, len(val)):
@@ -14,13 +16,13 @@ def change_value(val):
         else:
             new_val += val[i]
     final_val = ''
-    for j in range(0 , len(new_val)):
+    for j in range(0, len(new_val)):
         if new_val[j].upper() != new_val[j - 1]:
             final_val += new_val[j]
     return final_val
 
 
- # 2- validate data
+# 2 validate data
 class DataV(BaseModel):
     model_config = ConfigDict(
         alias_generator=change_value
@@ -80,11 +82,13 @@ class DataV(BaseModel):
     fund_watch: Optional[str] = None
 
 
+@task
 def fetch_data_from_api(url):
     response = requests.get(url)
     return json.loads(response.text)
 
 
+@task
 def save_data_to_db(data):
     data_list = [DataV.model_validate(item) for item in data['items']]
     for item in data_list:
@@ -144,6 +148,7 @@ def save_data_to_db(data):
         )
 
 
+@flow
 def fetch_and_store_data():
     data = fetch_data_from_api(fp_url)
     save_data_to_db(data)

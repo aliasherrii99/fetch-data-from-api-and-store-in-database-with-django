@@ -1,6 +1,5 @@
 from task3.models import Fp_data
 from django.db.models import Sum
-
 distinct_fund_type = Fp_data.objects.values('fund_type').distinct()
 
 

@@ -2,70 +2,55 @@ from task3.models import Fp_data
 import requests
 import json
 from task3.fetchSave import DataV
-
+from prefect import task, flow
 fp_url = "https://fund.fipiran.ir/api/v1/fund/fundcompare"
 
 
 # 1 return data from api
+@task
 def fetch_data_from_api(url):
     response = requests.get(url)
     return json.loads(response.text)
 
 
 # 2 return validated data from API
-def validated_data_from_api():
-    my_data = fetch_data_from_api(fp_url)
+@task
+def validated_data_from_api(my_data):
     data_api = [DataV.model_validate(item) for item in my_data['items']]
     return data_api
 
 
 # 3 return list of regno in api
-def regno_in_api():
+@task
+def regno_in_api(valid_data):
     list_regno = []
-    for i in validated_data_from_api():
+    for i in valid_data:
         list_regno.append(i.reg_no)
     return list_regno
 
 
 # 4 return list of regno in DB
+@task
 def regno_in_db():
     regno_list = Fp_data.objects.values_list('reg_no', flat=True)
     return list(regno_list)
 
 
-list_of_regno_in_api = regno_in_api()
-list_of_regno_in_db = regno_in_db()
-
-
 # 5 return list of regno not in db
-def regno_not_db():
-    list_not_in_db = []
-    for i in list_of_regno_in_api:
-        if i in list_of_regno_in_db:
-            pass
-        else:
-            list_not_in_db.append(i)
-    return list_not_in_db
-
-
-list_regno_not_in_db = regno_not_db()
-validated_data = validated_data_from_api()
+@task
+def regno_not_in_db(regno_api, regno_db):
+    return [regno for regno in regno_api if regno not in regno_db]
 
 
 # 6 return rows to be added
-def new_rows():
-    rows_be_add = []
-    for i in validated_data:
-        if i.reg_no in list_regno_not_in_db:
-            rows_be_add.append(i)
-    return rows_be_add
-
-
-rows_be_add_to_db = new_rows()
+@task
+def new_rows(valid_data, regno_not_in_db):
+    return [item for item in valid_data if item.reg_no in regno_not_in_db]
 
 
 # 7 add new data to DB
-def save_new_data_to_db():
+@task
+def save_new_data_to_db(rows_be_add_to_db):
     for item in rows_be_add_to_db:
         Fp_data.objects.create(
             reg_no=item.reg_no,
@@ -121,3 +106,26 @@ def save_new_data_to_db():
             ins_code=item.ins_code,
             fund_watch=item.fund_watch,
         )
+
+
+# run ETL cycle
+@flow
+def etl_flow():
+    # fetch data from api
+    api_data = fetch_data_from_api(fp_url)
+
+    # validate data
+    valid_data = validated_data_from_api(api_data)
+
+    # regno in db and api
+    regno_api = regno_in_api(valid_data)
+    regno_db = regno_in_db()
+
+    # regno in api and not in db
+    regno_miising = regno_not_in_db(regno_api, regno_db)
+
+    # find rows be added
+    rows_to_add = new_rows(valid_data, regno_miising)
+
+    # save in db
+    save_new_data_to_db(rows_to_add)
