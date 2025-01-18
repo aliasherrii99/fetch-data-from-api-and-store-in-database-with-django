@@ -3,6 +3,7 @@ import requests
 import json
 from task3.fetchSave import DataV
 from prefect import task, flow
+
 fp_url = "https://fund.fipiran.ir/api/v1/fund/fundcompare"
 
 
@@ -16,7 +17,10 @@ def fetch_data_from_api(url):
 # 2 return validated data from API
 @task
 def validated_data_from_api(my_data):
-    data_api = [DataV.model_validate(item) for item in my_data['items']]
+    data_api = []
+    for item in my_data["items"]:
+        validated_item = DataV.model_validate(item)
+        data_api.append(validated_item)
     return data_api
 
 
@@ -32,20 +36,28 @@ def regno_in_api(valid_data):
 # 4 return list of regno in DB
 @task
 def regno_in_db():
-    regno_list = Fp_data.objects.values_list('reg_no', flat=True)
+    regno_list = Fp_data.objects.values_list("reg_no", flat=True)
     return list(regno_list)
 
 
 # 5 return list of regno not in db
 @task
 def regno_not_in_db(regno_api, regno_db):
-    return [regno for regno in regno_api if regno not in regno_db]
+    result = []
+    for regno in regno_api:
+        if regno not in regno_db:
+            result.append(regno)
+    return result
 
 
 # 6 return rows to be added
 @task
 def new_rows(valid_data, regno_not_in_db):
-    return [item for item in valid_data if item.reg_no in regno_not_in_db]
+    result = []
+    for item in valid_data:
+        if item.reg_no in regno_not_in_db:
+            result.append(item)
+    return result
 
 
 # 7 add new data to DB
